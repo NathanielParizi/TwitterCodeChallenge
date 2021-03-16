@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">TwitterCodeChallenge</string>
+    <string name="current_temperature">current_temperature</string>
+</resources>
