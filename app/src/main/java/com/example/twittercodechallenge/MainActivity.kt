@@ -14,8 +14,10 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 
-private var temperature = 0
-private var cloudy = 0.0
+private var celsius = 0.0
+private var fahrenheit = 0.0
+private var cloudy = 0
+private var windSpeed = 0
 private const val TAG = "MainActivity"
 
 private lateinit var binding: ActivityMainBinding
@@ -29,22 +31,41 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         initializeApplication()
-        binding.temperature.text = TemperatureConverter.celsiusToFahrenheit(34F).toString()
-        coroutineFetch()
+        fahrenheit = TemperatureConverter.celsiusToFahrenheit(34F).toDouble()
+        binding.temperatureTxt.text =
+            "Celsius: ${celsius.toInt()}    Fahrenheit${fahrenheit.toInt()}"
+        binding.windSpeedTxt.text = windSpeed.toString()
+        fetchCurrentWeather()
         isCloudy(cloudy)
+
+        var arr = arrayListOf<Double>(1.0, 2.0, 3.0, 4.0, 7.0)
+        TemperatureConverter.calculateStandardDeviation(arr)
+        Log.d(TAG, "GOLD: ${arr} ")
+        Log.d(TAG, "GOLD: ${TemperatureConverter.calculateStandardDeviation(arr)} ")
+
+        binding.weatherBtn.setOnClickListener {
+            fetchFutureWeather()
+        }
     }
+
 
     override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
         super.onSaveInstanceState(outState, outPersistentState)
 
-        outState.putInt("key", temperature);
+        outState.putInt("celsius", celsius.toInt());
+        outState.putInt("windspeed", windSpeed);
+        outState.putInt("cloudy", cloudy);
 
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        temperature = savedInstanceState.getInt("key", 0)
-        binding.temperature.text = TemperatureConverter.celsiusToFahrenheit(temperature.toFloat()).toString()
+        celsius = savedInstanceState.getInt("celsius", 0).toDouble()
+        windSpeed = savedInstanceState.getInt("windspeed", 1)
+        cloudy = savedInstanceState.getInt("cloudy", 2)
+        binding.temperatureTxt.text =
+            TemperatureConverter.celsiusToFahrenheit(celsius.toFloat()).toString()
+
     }
 
     fun initializeApplication() {
@@ -55,7 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun isCloudy(cloudy: Double) {
+    fun isCloudy(cloudy: Int) {
         if (cloudy >= .5) {
             binding.cloudyIcon.visibility = VISIBLE
         } else {
@@ -64,8 +85,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
-    fun coroutineFetch() {
+    fun fetchCurrentWeather() {
         GlobalScope.launch(Dispatchers.IO) {
             Log.d(TAG, "NETWORK CALL")
 
@@ -73,12 +93,25 @@ class MainActivity : AppCompatActivity() {
             if (response.isSuccessful && response.body() != null) {
                 Log.d(TAG, "basicCoroutineFetch: ${response.body()}")
                 Log.d(TAG, "coroutineFetch: ${response.body()}")
-                Log.d(TAG, "coroutineFetch: ${response.body()}")
-            } else {
-                Log.d(TAG, "coroutineFetch: ${response.body()}")
+//                celsius = response.body()?.weather?.temp!!.toDouble()
+//                windSpeed = response.body()?.wind?.speed!!.toInt()
+//                cloudy = response.body()?.clouds?.cloudiness!!
             }
+        }
+    }
 
+    private fun fetchFutureWeather() {
+        GlobalScope.launch(Dispatchers.IO) {
+            Log.d(TAG, "NETWORK CALL")
 
+            val response = service.getWeather()
+            if (response.isSuccessful && response.body() != null) {
+                Log.d(TAG, "basicCoroutineFetch: ${response.body()}")
+                Log.d(TAG, "coroutineFetch: ${response.body()}")
+//                celsius = response.body()?.weather?.temp!!.toDouble()
+//                windSpeed = response.body()?.wind?.speed!!.toInt()
+//                cloudy = response.body()?.clouds?.cloudiness!!
+            }
         }
     }
 

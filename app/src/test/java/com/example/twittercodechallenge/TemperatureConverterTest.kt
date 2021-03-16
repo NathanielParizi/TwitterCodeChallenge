@@ -23,4 +23,9 @@ class TemperatureConverterTests {
         assertThat(TemperatureConverter.celsiusToFahrenheit(100f)).isEqualTo(212f, precision)
         assertThat(TemperatureConverter.celsiusToFahrenheit(1000f)).isEqualTo(1832f, precision)
     }
+    @Test
+    fun testStandardDeviation() {
+        val precision: Offset<Double> = within(0.01)
+        assertThat(TemperatureConverter.calculateStandardDeviation(arrayListOf(1.0,2.0,3.0,4.0,7.0))).isEqualTo(2.05, precision)
+    }
 }
