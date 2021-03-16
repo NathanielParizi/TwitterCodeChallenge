@@ -1,12 +1,10 @@
 package com.example.twittercodechallenge
 
 
-
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import org.koin.android.viewmodel.dsl.viewModel
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -18,6 +16,7 @@ val appModule = module {
 
     single { WeatherService() }
     single { WeatherRepository() }
+    single { MainActivity() }
 
     single {
         val gson: Gson = GsonBuilder()

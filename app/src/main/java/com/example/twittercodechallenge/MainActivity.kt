@@ -3,22 +3,23 @@ package com.example.twittercodechallenge
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
-import android.widget.Toast
-import android.widget.Toast.LENGTH_LONG
+import android.view.View.INVISIBLE
+import android.view.View.VISIBLE
 import androidx.appcompat.app.AppCompatActivity
 import com.example.twittercodechallenge.databinding.ActivityMainBinding
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.core.component.inject
 import org.koin.core.context.startKoin
 
 private var temperature = 0
+private var cloudy = 0.0
 private const val TAG = "MainActivity"
 
 private lateinit var binding: ActivityMainBinding
-private val service : WeatherRepository by lazy { WeatherRepository() }
+private val service: WeatherRepository by lazy { WeatherRepository() }
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,6 +31,7 @@ class MainActivity : AppCompatActivity() {
         initializeApplication()
         binding.temperature.text = TemperatureConverter.celsiusToFahrenheit(34F).toString()
         coroutineFetch()
+        isCloudy(cloudy)
     }
 
     override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
@@ -53,13 +55,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun isCloudy(cloudy: Double) {
+        if (cloudy >= .5) {
+            binding.cloudyIcon.visibility = VISIBLE
+        } else {
+            binding.cloudyIcon.visibility = INVISIBLE
+
+        }
+    }
+
+
     fun coroutineFetch() {
-        GlobalScope.launch() {
+        GlobalScope.launch(Dispatchers.IO) {
             Log.d(TAG, "NETWORK CALL")
 
             val response = service.getWeather()
             if (response.isSuccessful && response.body() != null) {
                 Log.d(TAG, "basicCoroutineFetch: ${response.body()}")
+                Log.d(TAG, "coroutineFetch: ${response.body()}")
+                Log.d(TAG, "coroutineFetch: ${response.body()}")
+            } else {
                 Log.d(TAG, "coroutineFetch: ${response.body()}")
             }
 

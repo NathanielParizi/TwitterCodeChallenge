@@ -1,6 +1,5 @@
 package com.example.twittercodechallenge
 
-import android.util.Log
 import com.example.twittercodechallenge.model.WeatherApiResponse
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
