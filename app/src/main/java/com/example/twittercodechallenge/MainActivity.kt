@@ -29,6 +29,7 @@ private val service: WeatherRepository by lazy { WeatherRepository() }
 val loading = MutableLiveData<Boolean>()
 val loadingError = MutableLiveData<String?>()
 var job: Job? = null
+var koinStarted = false
 
 
 class MainActivity : AppCompatActivity() {
@@ -37,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        initializeApplication()
+        if(!koinStarted){initializeApplication()}
         fahrenheit = TemperatureConverter.celsiusToFahrenheit(34F).toDouble()
         updateUI()
         fetchCurrentWeather()
@@ -83,6 +84,7 @@ class MainActivity : AppCompatActivity() {
             androidLogger()
             androidContext(this@MainActivity)
             modules(appModule)
+            koinStarted = true
         }
     }
 
