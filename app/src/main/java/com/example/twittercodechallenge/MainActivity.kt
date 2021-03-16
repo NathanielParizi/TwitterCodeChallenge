@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
 //                cloudy = response.body()?.clouds?.cloudiness!!
 //                futureWeather = response.body()?.weather?.temp!!.toDouble()
 
-                var tempOfDays  = arrayListOf(1.0,2.0,3.0,4.0,7.0)
+                var tempOfDays  = arrayListOf(14.77,14.72,12.77,14.27,14.57)
                 var stdTemp = TemperatureConverter.calculateStandardDeviation(tempOfDays)
                 celsius = 14.77
                 windSpeed = .51
