@@ -6,23 +6,29 @@ import android.util.Log
 import android.view.View.INVISIBLE
 import android.view.View.VISIBLE
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.MutableLiveData
 import com.example.twittercodechallenge.databinding.ActivityMainBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.example.twittercodechallenge.model.WeatherApiResponse
+import kotlinx.coroutines.*
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
+import retrofit2.Response
 
 private var celsius = 0.0
 private var fahrenheit = 0.0
 private var cloudy = 0
-private var windSpeed = .51
+private var windSpeed = 0.0
 private var futureWeather = 0.0
 private const val TAG = "MainActivity"
+private var tempOfDay = arrayListOf<Double>()
 
 private lateinit var binding: ActivityMainBinding
 private val service: WeatherRepository by lazy { WeatherRepository() }
+
+val loading = MutableLiveData<Boolean>()
+val loadingError = MutableLiveData<String?>()
+var job: Job? = null
 
 
 class MainActivity : AppCompatActivity() {
@@ -33,12 +39,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         initializeApplication()
         fahrenheit = TemperatureConverter.celsiusToFahrenheit(34F).toDouble()
-        binding.temperatureTxt.text =
-            "Celsius: ${celsius.toInt()}    Fahrenheit${fahrenheit.toInt()}"
-        binding.windSpeedTxt.text = "Wind Speed: " + windSpeed.toString()
-        binding.stdWeather.text = "Weather forcast  " + futureWeather.toString()
+        updateUI()
         fetchCurrentWeather()
-        isCloudy(cloudy)
 
 
         binding.weatherBtn.setOnClickListener {
@@ -46,12 +48,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun updateUI() {
+        binding.temperatureTxt.text =
+            "Celsius: ${celsius.toInt()}    Fahrenheit${fahrenheit.toInt()}"
+        binding.windSpeedTxt.text = "Wind Speed: " + windSpeed.toString()
+        binding.stdWeather.text = "Weather forcast  " + futureWeather.toString()
+        isCloudy(cloudy)
+
+    }
+
 
     override fun onSaveInstanceState(outState: Bundle, outPersistentState: PersistableBundle) {
         super.onSaveInstanceState(outState, outPersistentState)
 
         outState.putInt("celsius", celsius.toInt());
-        outState.putInt("windspeed", (windSpeed*100).toInt());
+        outState.putInt("windspeed", (windSpeed * 100).toInt());
         outState.putInt("cloudy", cloudy);
 
     }
@@ -85,50 +96,48 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun fetchCurrentWeather() {
-        GlobalScope.launch(Dispatchers.IO) {
-            Log.d(TAG, "NETWORK CALL")
 
-            val response = service.getWeather()
-            if (response.isSuccessful && response.body() != null) {
-                Log.d(TAG, "basicCoroutineFetch: ${response.body()}")
-                Log.d(TAG, "coroutineFetch: ${response.body()}")
-//                celsius = response.body()?.weather?.temp!!.toDouble()
-//                windSpeed = response.body()?.wind?.speed!!.toInt()
-//                cloudy = response.body()?.clouds?.cloudiness!!
+        Log.d(TAG, "NETWORK CALL")
 
-
-                 celsius = 14.77
-                windSpeed = .51
-               cloudy = 65
-
+        job = CoroutineScope(Dispatchers.IO).launch {
+            val response: Response<WeatherApiResponse> =
+                service.getWeather()
+            withContext(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    Log.d(TAG, "fetchCurrentWeather: ${response.body()}")
+                    loadingError.value = null
+                    loading.value = false
+                    celsius = (response.body()?.weather?.temp ?: 0) as Double
+                    windSpeed = (response.body()?.wind?.speed ?: 0) as Double
+                    cloudy = response.body()?.clouds?.cloudiness ?: 0
+                    updateUI()
+                }
             }
         }
+
     }
 
     private fun fetchFutureWeather() {
-        GlobalScope.launch(Dispatchers.Main) {
+        GlobalScope.async(Dispatchers.Main) {
             Log.d(TAG, "NETWORK CALL")
+            var count = 0
+            var listOfDays = arrayListOf("1", "2", "3", "4", "5")
+            listOfDays.forEach {
+                count++
+                val response = service.getFutureWeather(it)
+                if (response.isSuccessful && response.body()?.clouds != null) {
+                    Log.d(TAG, "future: $count   ${response.body()} ")
+                    tempOfDay.add(response.body()?.weather?.temp!!)
+                    var stdTemp = TemperatureConverter.calculateStandardDeviation(tempOfDay)
+                    futureWeather = stdTemp
+                    binding.stdWeather.text = "Weather forcast: $futureWeather"
+                    isCloudy(cloudy)
 
-            val response = service.getFutureWeather()
-            if (response.isSuccessful && response.body() != null) {
-                Log.d(TAG, "basicCoroutineFetch: ${response.body()}")
-                Log.d(TAG, "coroutineFetch: ${response.body()}")
-//                celsius = response.body()?.weather?.temp!!.toDouble()
-//                windSpeed = response.body()?.wind?.speed!!.toInt()
-//                cloudy = response.body()?.clouds?.cloudiness!!
-//                futureWeather = response.body()?.weather?.temp!!.toDouble()
-
-                var tempOfDays  = arrayListOf(14.77,14.72,12.77,14.27,14.57)
-                var stdTemp = TemperatureConverter.calculateStandardDeviation(tempOfDays)
-                celsius = 14.77
-                windSpeed = .51
-                cloudy = 65
-                futureWeather = stdTemp
-                binding.stdWeather.text = "Weather forcast: $futureWeather"
-                isCloudy(cloudy)
-
+                }
             }
         }
     }
-
 }
+
+
+

@@ -6,7 +6,6 @@ import org.koin.core.component.inject
 import retrofit2.Response
 
 
-
 class WeatherRepository : KoinComponent {
 
     private val magicService: WeatherService by inject()
@@ -18,8 +17,9 @@ class WeatherRepository : KoinComponent {
     }
 
     suspend fun getFutureWeather(
+        days: String
     ): Response<WeatherApiResponse> {
-        return magicService.getWeather()
+        return magicService.getFutureWeather(days)
     }
 
 }

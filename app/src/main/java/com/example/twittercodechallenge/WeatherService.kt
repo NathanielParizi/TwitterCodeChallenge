@@ -18,7 +18,7 @@ class WeatherService : KoinComponent {
         return apiService.getWeather()
     }
 
-    suspend fun getFutureWeather(): Response<WeatherApiResponse> {
-        return apiService.getWeather()
+    suspend fun getFutureWeather(days : String): Response<WeatherApiResponse> {
+        return apiService.getFutureWeather(days)
     }
 }
