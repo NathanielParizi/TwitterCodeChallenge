@@ -18,6 +18,7 @@ private var celsius = 0.0
 private var fahrenheit = 0.0
 private var cloudy = 0
 private var windSpeed = 0
+private var futureWeather = 0.0
 private const val TAG = "MainActivity"
 
 private lateinit var binding: ActivityMainBinding
@@ -34,11 +35,12 @@ class MainActivity : AppCompatActivity() {
         fahrenheit = TemperatureConverter.celsiusToFahrenheit(34F).toDouble()
         binding.temperatureTxt.text =
             "Celsius: ${celsius.toInt()}    Fahrenheit${fahrenheit.toInt()}"
-        binding.windSpeedTxt.text = windSpeed.toString()
+        binding.windSpeedTxt.text = "Wind Speed: " + windSpeed.toString()
+        binding.stdWeather.text = "Weather forcast" + futureWeather.toString()
         fetchCurrentWeather()
         isCloudy(cloudy)
 
-        var arr = arrayListOf<Double>(1.0, 2.0, 3.0, 4.0, 7.0)
+        var arr = arrayListOf<Double>(1.0, 2.0, 3.0, 4.0, 7.0) // Will be std = 2.05
         TemperatureConverter.calculateStandardDeviation(arr)
         Log.d(TAG, "GOLD: ${arr} ")
         Log.d(TAG, "GOLD: ${TemperatureConverter.calculateStandardDeviation(arr)} ")
@@ -104,13 +106,17 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.IO) {
             Log.d(TAG, "NETWORK CALL")
 
-            val response = service.getWeather()
+            val response = service.getFutureWeather()
             if (response.isSuccessful && response.body() != null) {
                 Log.d(TAG, "basicCoroutineFetch: ${response.body()}")
                 Log.d(TAG, "coroutineFetch: ${response.body()}")
-//                celsius = response.body()?.weather?.temp!!.toDouble()
-//                windSpeed = response.body()?.wind?.speed!!.toInt()
-//                cloudy = response.body()?.clouds?.cloudiness!!
+                celsius = response.body()?.weather?.temp!!.toDouble()
+                windSpeed = response.body()?.wind?.speed!!.toInt()
+                cloudy = response.body()?.clouds?.cloudiness!!
+                futureWeather = response.body()?.weather?.temp!!.toDouble()
+
+
+
             }
         }
     }
