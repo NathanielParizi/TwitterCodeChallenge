@@ -122,6 +122,7 @@ class MainActivity : AppCompatActivity() {
     private fun fetchFutureWeather() {
         GlobalScope.async(Dispatchers.Main) {
             Log.d(TAG, "NETWORK CALL")
+            tempOfDay.clear()
             var count = 0
             var listOfDays = arrayListOf("1", "2", "3", "4", "5")
             listOfDays.forEach {
@@ -131,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "future: $count   ${response.body()} ")
                     tempOfDay.add(response.body()?.weather?.temp!!)
                     var stdTemp = TemperatureConverter.calculateStandardDeviation(tempOfDay)
-                    futureWeather = stdTemp
+                    futureWeather = TemperatureConverter.celsiusToFahrenheit(stdTemp.toFloat()).toDouble()
                     binding.stdWeather.text = "Weather forcast: $futureWeather"
                     isCloudy(cloudy)
 
